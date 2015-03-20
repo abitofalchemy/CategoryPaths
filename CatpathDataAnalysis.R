@@ -6,15 +6,58 @@ setwd('/home/saguinag/CategoryPaths/')
 #hpcpsp_path = 'cat_ppr_DataFiles/kgcupscp.csv'
 ## file includes the hops
 data_path   = 'pathsHopsFiles/kgcupscp_ppr_hops.csv'
-
 hpcpsp_dat <-read.csv(data_path, na.strings ='inf')
 df <- data.frame(hpcpsp_dat)
 
-#   clicks cp                             game            key        prob sp         usr
-# 1     11  8 f89c13df89c04015ac26cf9cdfb31e74 59720_to_21247 9.24268e-08  2 Guest56194P
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+## Below: filter records where PPR is above 0
 df <- df[df$prob>0,]
+## filter records that have paths below 30
+df <- df[df$cp<30,]
+df <- df[df$clicks<30,]
 head(df)
+
+## stats
+summary(df$clicks)
+summary(df$cp)
+summary(df$sp)
+#
+var(df$clicks)
+var(df$cp)
+var(df$sp)
+#
+sd(df$clicks)
+sd(df$cp)
+sd(df$sp)
+# Mode statistic:
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+Mode(df$sp)
+Mode(df$cp)
+Mode(df$clicks)
+
+## Plot the frequency as a function of path length
+#http://www.tagwith.com/question_1264226_plot-frequency-distribution-of-one-column-data-in-r
+
+hp.histogram = hist(df$clicks, breaks = 60, freq = F, xlab = 'Path length', ylim = c(0, 0.4),
+                    ylab = 'Frequency', main = 'Histogram of')
+hp.ylim.normal = range(1, hp.histogram$density, dnorm(df$clicks, mean = mean(df$clicks), sd = sd(df$clicks)), na.rm = T)
+curve(dnorm(x, mean = mean(df$clicks), sd = sd(df$clicks)), add = T)
+curve(dgamma(x, shape = mean(df$clicks)^2/var(df$clicks), scale = var(df$clicks)/mean(df$clicks)), add = T)
+
+## cp
+cp.histogram = hist(df$cp, breaks = 60, freq = F, xlab = 'Path length', ylim = c(0, 1),
+                    ylab = 'Probability', main = 'Histogram of')
+cp.ylim.normal = range(0, hp.histogram$density, dnorm(df$cp, mean = mean(df$cp), 
+                                                      sd = sd(df$cp)), na.rm = T)
+curve(dnorm(x, mean = mean(df$cp), sd = sd(df$cp)), add = T)
+## sp
+hist(df$sp, breaks = 10, freq = F, xlim = c(0, 6), xlab = 'Path Length', ylab = 'Relative Frequency', main = 'Histogram of')
+curve(dgamma(x, shape = mean(df$sp)^2/var(df$sp), scale = var(df$sp)/mean(df$sp)), add = T)
+
+# http://www.r-tutor.com/elementary-statistics/quantitative-data/cumulative-frequency-graph
+
 
 ppr_gby_hp_se <- summarySE(data = df, measurevar="prob", groupvars = c('clicks'), 
                            na.rm = TRUE, conf.interval = 0.95, .drop = TRUE)
