@@ -1,0 +1,86 @@
+---
+title: "Category Paths Basic"
+author: "S. Aguinaga"
+date: "10/21/2014"
+output: html_document
+---
+
+Project Files
+-------------
+
+Project Folder:
+
+- HOME/CategoryPaths/
+
+Scripts:
+
+- CategoryPaths/scripts/
+- ~/Scriptus/pyths/dsg1
+
+Description
+-----------
+
+<h3>Data-sets</h3>
+Source Nodes
+- Location: ```dsg1:/data/zliu8/sssp/```
+
+We start with 100 start nodes (Wikipedia page ids)
+```
+/data/zliu8/sssp$ ls -1 | wc -l
+100
+
+ls -1 | head
+sssp_1018340.txt
+sssp_10568.txt
+sssp_10671.txt
+sssp_11054.txt
+sssp_11121.txt
+```
+For each of these starting nodes we get the following set of games
+
+```
+~/CategoryPaths/gamesDatafiles$ head 1018340_wpgame_games.dat
+src_pg, game,                            end_pg
+1018340,08f2f5bb32504c3d8b5ad3dbc6ae92d2,19011063
+1018340,fa2b9a1da0b64682b97f6344c262c0b5,9147836
+1018340,3279c75c8b0341bbac09c3b44d0f0856,49603
+
+```
+This gives gives a total of ```42877``` games.  Here is an example of a starting node:
+
+
+Processing file:  ```sssp_9475228.txt```
+
+<h4>Shortest Path Length For These Games</h4>
+The shortest path (L) for games starting with each start_node in our set. For example, file ```sssp_9475228.txt``` has ```175``` games.
+
+```{r,echo=FALSE}
+library(ggplot2);library(reshape2)
+setwd("~/CategoryPaths/")
+sp_for_games <- read.csv('ssspGamesDatFiles/9475228_to_path_game_sp.csv',sep=",",header=FALSE)
+# qplot(sp_for_games$V3,binwidth=0.5, alpha = .5) +xlab("Path Length (L)")+xlim(0,max(sp_for_games$V3)+1)
+data = data.frame()
+df<- data.frame(sp_for_games)
+data<-rbind(data,df)
+# histograms
+all_dat <- melt(data)
+# one set of games
+p<-ggplot(all_dat, aes(x=value, fill=variable)) + geom_histogram(binwidth=0.5, alpha=0.5, position="identity") + ylab("count/L") +xlim(0,4)
+p
+```
+
+Distance distribution for all games that start with 100 unique page_ids.
+```{r,echo=FALSE}
+pathsSpAll <- read.csv('ssspGamesDatFiles/path_game_sp_1.csv',sep=",",header=FALSE)
+# qplot(sp_for_games$V3,binwidth=0.5, alpha = .5) +xlab("Path Length (L)")+xlim(0,max(sp_for_games$V3)+1)
+data = data.frame()
+df<- data.frame(pathsSpAll)
+data<-rbind(data,df)
+# histograms
+all_dat <- melt(data)
+# one set of games
+p<-ggplot(all_dat, aes(x=value, fill=variable)) + geom_histogram(binwidth=0.5, alpha=0.5, position="identity") + ylab("count/L") +xlim(0,4)
+p
+```
+
+
