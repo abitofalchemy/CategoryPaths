@@ -4,10 +4,12 @@ require(Hmisc)
 library(scales); library(Kendall)
 setwd('/home/saguinag/CategoryPaths/')
 #hpcpsp_path = 'cat_ppr_DataFiles/kgcupscp.csv'
+
 ## file includes the hops
 data_path   = 'pathsHopsFiles/kgcupscp_ppr_hops.csv'
 hpcpsp_dat <-read.csv(data_path, na.strings ='inf')
 df <- data.frame(hpcpsp_dat)
+
 
 ## Below: filter records where PPR is above 0
 df <- df[df$prob>0,]
@@ -15,6 +17,29 @@ df <- df[df$prob>0,]
 df <- df[df$cp<30,]
 df <- df[df$clicks<30,]
 head(df)
+
+## # Do x and y come from the same distribution?
+## Kolmogorov-Smirnov Tests
+##  Performs one or two sample Kolmogorov-Smirnov tests.
+SP <- df$sp
+HP <- df$clicks
+CP <- df$cp 
+
+ks.test(HP,SP)
+# Does x come from a shifted gamma distribution with shape 3 and rate 2?
+ks.test(HP+2, "pgamma", 3, 2) # two-sided, exact
+ks.test(HP+2, "pgamma", 3, 2, exact = FALSE)
+ks.test(HP+2, "pgamma", 3, 2, alternative = "gr")
+
+ks.test(HP,CP)
+
+ks.test(CP,SP)
+ks.test(CP,HP)
+
+ks.test(SP,CP)
+ks.test(SP,HP)
+
+
 
 ## stats
 summary(df$clicks)
@@ -57,6 +82,11 @@ hist(df$sp, breaks = 10, freq = F, xlim = c(0, 6), xlab = 'Path Length', ylab = 
 curve(dgamma(x, shape = mean(df$sp)^2/var(df$sp), scale = var(df$sp)/mean(df$sp)), add = T)
 
 # http://www.r-tutor.com/elementary-statistics/quantitative-data/cumulative-frequency-graph
+
+
+
+
+
 
 
 ppr_gby_hp_se <- summarySE(data = df, measurevar="prob", groupvars = c('clicks'), 
@@ -283,6 +313,7 @@ ggsave(plt9, file="plotFiles/figure9.pdf",width=6, height=4)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # Sum of Weights / Hops CatPath
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+library(grid)
 ggplot(df[sample(nrow(df),500), ], aes(x=cp, y=hops)) + geom_point(color = "black",alpha=.5, size=3) + 
   xlim(0,20) + ylim(0,10) +
   geom_smooth(method = 'lm', na.rm = TRUE, se=TRUE) +
@@ -295,12 +326,13 @@ ggplot(df[sample(nrow(df),500), ], aes(x=cp, y=hops)) + geom_point(color = "blac
         axis.title.x = element_text(size=16) 
   )
 ggsave(file="plotFiles/figure_hops.pdf",width=5, height=4)
+
 ##  Hops HumanPath
 ggplot(df[sample(nrow(df),500), ], aes(x=clicks, y=hops)) +   
   geom_point(color = "black",alpha=.5, size=3) + 
   xlim(0,20) + ylim(0,7) +
   geom_smooth(method = 'lm', na.rm = TRUE, se=TRUE) +
-  theme_classic() + ylab('CathPath Distance') + xlab('Human Path Length') + 
+  theme_classic() + ylab('CatPath Distance') + xlab('Human Path Length') + 
   theme(legend.key.width=unit(2,"line"),
         # Text settings for scale
         axis.text = element_text(size=12),
@@ -309,6 +341,22 @@ ggplot(df[sample(nrow(df),500), ], aes(x=clicks, y=hops)) +
         axis.title.x = element_text(size=16) 
   )
 ggsave(file="plotFiles/hops_humanpath.pdf",width=5, height=4)
+##  Hops HumanPath
+##  (For figure 5 - timestamp: jul 12 2015) changed y=hops to cp?!!!
+
+ggplot(df[sample(nrow(df),500), ], aes(x=clicks, y=cp)) +   
+  geom_point(color = "black",alpha=.5, size=3) + 
+  xlim(0,20) + ylim(0,7) +
+  geom_smooth(method = 'lm', na.rm = TRUE, se=TRUE) +
+  theme_classic() + ylab('CatPath Length') + xlab('Human Path Length') + 
+  theme(legend.key.width=unit(2,"line"),
+        # Text settings for scale
+        axis.text = element_text(size=12),
+        # Text settings for axis titles
+        axis.title.y = element_text(size=16),
+        axis.title.x = element_text(size=16) 
+  )
+ggsave(file="plotFiles/cp_humanpath.pdf",width=5, height=4)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 #   Jaccard Coefficient
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#

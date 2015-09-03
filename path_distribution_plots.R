@@ -1,24 +1,3 @@
-# library(ggplot2);library(reshape2)
-# require("Rmisc")
-# require(Hmisc)
-# library(scales); library(Kendall)
-# setwd('/home/saguinag/CategoryPaths/')
-# 
-# data_path   = 'gbSP.dat'
-# gbHP_dat <-read.csv("gbHP.dat", na.strings ='inf')
-# gbCP_dat <-read.csv("gbCP.dat", na.strings ='inf')
-# gbSP_dat <-read.csv("gbSP.dat", na.strings ='inf')
-# gbPP_dat <-read.csv("gbPP.dat", na.strings ='inf')
-# df <- data.frame(gbHP_dat)
-# df$
-# head(df)
-# 
-# # p <- ggplot(df, aes(x=seq(1,nrow(df)), y=df$clicks)) + geom_point(shape=1) +
-# # geom_line()
-# # 
-# # 
-# # 
-# # p df <- data.frame(gbsP_dat)
 library(ggplot2);library(reshape2)
 require("Rmisc")
 require(Hmisc)
@@ -31,8 +10,11 @@ gbHP_dat <-read.csv('gbHP.dat', na.strings ='inf')
 gbCP_dat <-read.csv('gbCP.dat', na.strings ='inf')
 gbPP_dat <-read.csv('gbPP.dat', na.strings ='inf')
 
-sp = gbSP_dat$clicks
-hp = gbHP_dat$sp
+pf <- data.frame(gbPP_dat)
+ggplot(pf, aes(clicks)) + geom_line(aes(y = prob, colour = "var0"))
+
+hp = gbSP_dat$clicks
+sp = gbHP_dat$sp
 pp = gbPP_dat$prob
 cp = gbCP_dat$sp
 
@@ -54,6 +36,7 @@ df$cp = df$cp/sum(df$cp)
 df$pp = df$pp/sum(df$pp)
 
 binned.x <- cut(df$pp, 30)
+
 
 
 ggplot(df, aes(V1)) + 
