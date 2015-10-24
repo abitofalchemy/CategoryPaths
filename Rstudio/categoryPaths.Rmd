@@ -1,0 +1,266 @@
+---
+title: "Category Paths"
+author: "S. Aguinaga"
+date: "10/21/2014"
+output: html_document
+---
+
+<h2><font color=#6495ED>Brain Dump</font></h2>
+
+*This document is the work-pad for this project, so this document will include notes about Rsdutio and howtos.*
+
+Project Files
+-------------
+
+Project Folder:
+
+- ~/CategoryPaths/
+
+Scripts:
+
+- CategoryPaths/scripts/
+
+Data Files:
+
+- /data/zliu8/ssssp/
+- /data/zliu8/our_algo##
+
+Introduction
+------------
+
+<h4>Source Nodes (page id</h4>
+
+100 source nodes (wikipedia.page.page_id) were selected and these are embeded in the filenames for the single-source-shortest-paths. Below the source folder and sample of the files are listed.
+
+```
+saguinag@dsg1:~$  ls /data/zliu8/sssp/ | head
+sssp_1018340.txt
+sssp_10568.txt
+sssp_10671.txt
+sssp_11054.txt
+sssp_11121.txt
+sssp_11125639.txt
+```
+
+<h4>Games</h4>
+
+Using these filenames, for each source node, the games (uid) starting with a given source node are extracted to find the end-nodes (destination page_id).
+
+```
+scripts/games_given_sssp.py /data/zliu8/sssp/
+```
+The output goes in folder gamesDatafiles.
+
+```
+saguinag@dsg1:~/CategoryPaths/gamesDatafiles$ ls
+1018340_wpgame_games.dat
+10568_wpgame_games.dat
+10671_wpgame_games.dat
+...
+
+cat 1018340_wpgame_games.dat | head
+src_pg,game,end_pg
+1018340,08f2f5bb32504c3d8b5ad3dbc6ae92d2,19011063
+1018340,fa2b9a1da0b64682b97f6344c262c0b5,9147836
+1018340,3279c75c8b0341bbac09c3b44d0f0856,49603
+1018340,999aaaf3c86c40ed8c2bd59007d487c5,16245
+```
+
+<h4>Human Paths</h4>
+
+For each game, the users that played each game are extracted and count the number of clicks for games started and finished.
+Not all games were completed, but for those that were we can get the users that 
+played a given game.
+```
+humanPathsSsspScores.py ~/CategoryPaths/gamesDatafiles/
+```
+
+Here is an example of completed games and the user.
+
+```
+ec81d184fd444570ab65d1830dee41bc joppi
+16a5df42c16247c68226c12fa50a7384 Bellerophonia
+16a5df42c16247c68226c12fa50a7384 ChrisOk1
+16a5df42c16247c68226c12fa50a7384 Guest24F1A079FA64422583F360DBB
+16a5df42c16247c68226c12fa50a7384 Guest35F9CFA0878144C79535FAE96
+16a5df42c16247c68226c12fa50a7384 Guest4C81573A4FED4FC6908618880
+```
+The distribution of the cliks for all games played and completed.
+
+```{r, echo=FALSE}
+setwd('/home/saguinag/CategoryPaths/')
+hpData <- read.csv(file='hpDataFiles/1018340_wpgame_games.dataframe', header=TRUE, sep=',')
+library("ggplot2")
+qplot(hpData$clicks,binwidth=.5) + xlab("Clicks")+ggtitle('Human Paths (wikipediagame)')
+```
+<hr></hr>
+
+<h4>Shortest Paths</h4>
+The distribution of the shortest paths: single source shortest paths (sssp) for each games' end-points.
+
+```{r, echo=FALSE}
+setwd('/home/saguinag/CategoryPaths/')
+shrtPaths <- read.csv(file='ssspGamesDatFiles/9475228_games_sp.dat', header=TRUE,sep=',')
+library("ggplot2")
+qplot(shrtPaths$sp,binwidth=0.5) + xlab('Path Scores')+ggtitle('Single Source Shortest Paths')
+```
+
+
+<hr></hr> ##########################################################
+<h2><font color=#6495ED>Shortest vs Category Paths</font></h2>
+
+Below is a figure showing the number of hops for category paths (cp) and shortest paths (sp).
+
+
+*Output files in ~/CategoryPaths/ourAlgoScores/ consist of both, shrotest paths and category paths.  The files are read into a list and a single data.frame holds the entire set of paths.*
+
+```{r, echo=FALSE}
+library(ggplot2);library(reshape2)
+# the home directory
+setwd("~/CategoryPaths/")
+# folder that contains files showing paths and the shortest (SP) and CategoryPaths (CP) scores
+cp_sp_path = 'ourAlgoScores/'
+file.names <- list.files(cp_sp_path,pattern='*.csv')
+
+data = data.frame()
+for(i in 1:length(file.names)){
+  cp_sp_dat <-read.csv(paste(cp_sp_path,file.names[i],sep = ''),
+                       na.strings ='inf', 
+                       colClasses=c('key'='factor','sp'='integer','cp'= 'integer'))
+  df <- data.frame(cp_sp_dat)
+  data <- rbind(data,df)
+}
+# Overlaid histograms
+all_dat <- melt(data);
+p0<-ggplot(all_dat, aes(x=value, fill=variable)) + 
+  geom_histogram(binwidth=0.5, alpha=.5, position="identity") + 
+  xlim(0,20) + xlab('Path Length (L)') 
+```
+
+
+
+```{r, echo=FALSE}
+p1 <- ggplot(data,aes(cp,sp))+geom_point(color="firebrick", alpha=.5,) + xlab('Category Paths') + ylab('Shortests Paths') + scale_x_log10() 
+p1
+```
+
+In the next section we show how the two sets of paths correlate. 
+
+<b>Testing for significant difference between the paths</b>
+
+Wilconxon RankSum test: Test if the two data samples (cp vs sp) are matched without assuming they follow a normal distribution.
+
+
+```{r, echo=FALSE}
+wilcox.test(data$sp, data$cp, paired=TRUE)
+```
+
+Checking for the significance test for Kendall's Tau-b, but first the correlation:
+
+```
+> cor(m, method="kendall",use='pairwise')
+          [,1]      [,2]
+[1,] 1.0000000 0.2929309
+[2,] 0.2929309 1.0000000
+```
+
+To test the null hypothesis to find the p-value:
+
+```
+cor.test(data$sp,data$cp, method='kendall')
+
+  Kendall's rank correlation tau
+
+data:  data$sp and data$cp
+z = 58.9618, p-value < 2.2e-16
+alternative hypothesis: true tau is not equal to 0
+sample estimates:
+      tau 
+0.2929309 
+```
+
+<h2><font color="#6495ED">Human Paths vs Category Paths</font></h2>
+
+```{r, echo=FALSE}
+## Category Path vs Human Paths
+##
+cp_hp_in_file = '~/CategoryPaths/hpGmUserCPdataFiles/hpGmUsersCP.csv'
+data2 = data.frame()
+cp_hp_dat <-read.csv(cp_hp_in_file, sep = ',',header=TRUE,
+                       na.strings ='inf', 
+                       colClasses=c('cp'='integer','hp'='integer','key'='factor','user'='factor'))
+df1 <- data.frame(cp_hp_dat)
+df1$ix<-NULL
+data2 <- rbind(data2,df1)
+
+## show the distribution of the paths
+p2<-ggplot(data2, aes(x=cp, y=hp)) +
+  geom_point(shape=21, show_guide=FALSE, color="firebrick", alpha=.5) +  
+  xlab('Category Paths') + ylab('Human Paths (L)') + ylim(0,200) + xlim(0,25)
+p2
+```
+
+The Distribution of Category Paths and Human Paths
+```{r, echo=FALSE}
+# Overlaid histograms: Category Paths and Human Paths
+cp_hp_mdat <- melt(data2);
+p3<-ggplot(cp_hp_mdat, aes(x=value, fill=variable)) + 
+  geom_histogram(binwidth=0.5, alpha=.5, position="identity") + 
+  xlim(0,30) + xlab('Path Length (# hops)') 
+p3
+```
+
+<hr></hr>
+<h2><font color=#6495ED>Summary</font></h2>
+
+*This section shows the plots of highest interest*
+
+```{r, echo=FALSE}
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  require(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+multiplot(p0, p1, p2, p3,cols=2)
+```
+
