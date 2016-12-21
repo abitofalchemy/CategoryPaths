@@ -10,6 +10,6 @@ We explore and validate a new model of how humans navigate an information networ
 
 ## Publication
 
-Venue: 2015 IEEE International Conference on Big Data (Big Data)
-Title: Concept Hierarchies and Human Navigation
-Authors: Salvador Aguinaga∗, Aditya Nambiar†, Zuozhu Liu‡ and Tim Weninger∗ ∗University of Notre Dame, Email: {saguinag, tweninge}@nd.edu, †IIT Bombay, Email: aditya.nambiar@iitb.ac.in, ‡Zhejiang University, Email: lcowen.hn@zju.edu.cn
+- Venue: 2015 IEEE International Conference on Big Data (Big Data)
+- Title: Concept Hierarchies and Human Navigation
+- Authors: Salvador Aguinaga∗, Aditya Nambiar†, Zuozhu Liu‡ and Tim Weninger∗ ∗University of Notre Dame, Email: {saguinag, tweninge}@nd.edu, †IIT Bombay, Email: aditya.nambiar@iitb.ac.in, ‡Zhejiang University, Email: lcowen.hn@zju.edu.cn
